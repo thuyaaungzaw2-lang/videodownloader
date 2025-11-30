@@ -173,6 +173,7 @@ if (downloadBtn) {
         );
       } else if (data.status === "ready" && data.downloadUrl) {
         setStatus("Your file is ready. Starting download…", "ok");
+        // 🔥 auto download here
         window.location.href = data.downloadUrl;
       } else {
         setStatus(
