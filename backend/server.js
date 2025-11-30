@@ -101,7 +101,11 @@ app.post("/api/request", async (req, res) => {
   }
 
   // client side နဲ့ backend detect မကိုက်ရင် log ထားမယ် (security အနည်းငယ်)
-  if (clientPlatform && detectedPlatform !== "unknown" && clientPlatform !== detectedPlatform) {
+  if (
+    clientPlatform &&
+    detectedPlatform !== "unknown" &&
+    clientPlatform !== detectedPlatform
+  ) {
     console.warn("Platform mismatch:", {
       fromClient: clientPlatform,
       inferred: detectedPlatform,
@@ -109,41 +113,25 @@ app.post("/api/request", async (req, res) => {
     });
   }
 
-  // Download logic / Job queue / Worker သွားစေမယ်ဆိုရင် ဒီနေရာလောက်ကနေစ
-  // ❗ IMPORTANT NOTE:
-  // ဒီ backend က URL + resolution + platform ကို လက်ခံပေးရုံပါပဲ။
-  // YouTube / Facebook / TikTok ကို stream-rip/downloader လုပ်ရာမှာ
-  //   - သူတို့ရဲ့ Terms of Service
-  //   - Copyright စည်းမျဉ်း
-  // တွေကို အပြည့်အဝလိုက်နာရပါမယ်။
-  //
-  // အကောင်းဆုံးคือ
-  //   - ကိုယ်ပိုင် content
-  //   - အသုံးပြုခွင့်ရထားတဲ့ content
-  //   - အရိပ်အချင်းတင် / clipping လျှောက်လုပ်တဲ့ပုံစံတွေကို
-  // စနစ်တကျ API နဲ့ handle လိုက်သင့်ပါတယ်။
-
-  // demo အနေနဲ့ "queued" ဆန်ဆန် response ပြန်ပေးထားမယ်
   console.log("Incoming request:", {
     videoUrl,
     resolution,
     detectedPlatform,
   });
 
-  // နောင်တစ်ချီမှာ
-  //   - jobId generate လုပ်ပြီး queue ထဲသို့ ထည့်
-  //   - /api/status/:jobId လို့ query ဖို့ design ပြီး
-  //   - ready ဖြစ်တဲ့အချိန်မှာ downloadUrl ပြန်ပေး
-  // စတဲ့ pattern နဲ့ဆက်တင်သွားလို့ရတယ်။
-
+  // ⚠️ Demoအတွက် — အမြဲတမ်း ready + sample download URL တစ်ခုပဲ ပြန်ပေးထားတယ်
+  // ကိုယ်ပိုင် file server / ကိုယ်ပိုင် content URL နဲ့ အောက်က link ကို အစားထိုးသုံးပါ
   return res.json({
-    status: "queued",
-    message:
-      "Request accepted. Implement the actual processing / download logic on the server side for your own allowed use-cases.",
-    data: {
+    status: "ready",
+    message: "Your file is ready for download (demo response).",
+    downloadUrl: "https://your-own-file-server.com/sample.mp4",
+    info: {
       videoUrl,
-      resolution,
-      platform: detectedPlatform === "unknown" ? clientPlatform || "unknown" : detectedPlatform,
+      requestedResolution: resolution,
+      platform:
+        detectedPlatform === "unknown"
+          ? clientPlatform || "unknown"
+          : detectedPlatform,
     },
   });
 });
@@ -159,4 +147,3 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
-
