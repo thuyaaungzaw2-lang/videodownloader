@@ -118,6 +118,50 @@ downloadBtn.addEventListener("click", async () => {
   downloadBtn.disabled = true;
 
   try {
+    const response = await fetch(
+      "https://videodownload-production.up.railway.app/api/request",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ videoUrl, resolution, platform }),
+      }
+    );
+
+    // network OK ဖြစ်ပေမဲ့ server side error ဖြစ်နိုင်လို့ ဒီမှာစစ်
+    if (!response.ok) {
+      console.log("Response not OK, status =", response.status);
+      throw new Error("Server returned an error.");
+    }
+
+    const data = await response.json();
+    console.log("Response JSON:", data);
+
+    if (data.status === "queued") {
+      setStatus(
+        `Request received ✔ Platform: ${
+          platform || "unknown"
+        }. Backend will handle it.`,
+        "ok"
+      );
+    } else if (data.status === "ready" && data.downloadUrl) {
+      setStatus("Your file is ready. Starting download…", "ok");
+      window.location.href = data.downloadUrl;
+    } else {
+      setStatus(
+        data.message ||
+          "Request completed, but no download URL was returned by the server.",
+        "info"
+      );
+    }
+  } catch (err) {
+    console.error("Client error:", err);
+    setStatus("Something went wrong while talking to the server.", "error");
+  } finally {
+    downloadBtn.disabled = false;
+  }
+});
+
+  try {
     // Railway backend URL ကို သင့် domain နဲ့ ပြောင်းထည့်
 try {
   const response = await fetch("https://videodownload-production.up.railway.app/api/request", {
