@@ -5,9 +5,15 @@ const statusText = document.getElementById("status");
 const yearSpan = document.getElementById("year");
 const platformChips = document.querySelectorAll(".chip[data-platform]");
 
-yearSpan.textContent = new Date().getFullYear().toString();
+// Year in footer
+if (yearSpan) {
+  yearSpan.textContent = new Date().getFullYear().toString();
+}
+
+// ---------- Helper functions ----------
 
 function setStatus(message, type = "info") {
+  if (!statusText) return;
   statusText.textContent = "";
   statusText.className = `status ${type}`;
   statusText.insertAdjacentHTML("beforeend", message);
@@ -29,7 +35,6 @@ function detectPlatformFromUrl(value) {
   try {
     url = new URL(value);
   } catch (e) {
-    // Try to add https if missing
     try {
       url = new URL("https://" + value);
     } catch (err) {
@@ -64,7 +69,7 @@ function highlightPlatform(platform) {
 }
 
 function updatePlatformState() {
-  const value = urlInput.value.trim();
+  const value = (urlInput?.value || "").trim();
   const platform = detectPlatformFromUrl(value);
 
   if (!value) {
@@ -95,92 +100,95 @@ function updatePlatformState() {
   }
 }
 
-// auto-detect while typing
-["input", "blur", "change"].forEach((evt) => {
-  urlInput.addEventListener(evt, updatePlatformState);
-});
+// ---------- Auto-detect while typing ----------
+if (urlInput) {
+  ["input", "blur", "change"].forEach((evt) => {
+    urlInput.addEventListener(evt, updatePlatformState);
+  });
+}
 
-// main click handler
-downloadBtn.addEventListener("click", async () => {
-  const videoUrl = urlInput.value.trim();
-  const resolution = resolutionSelect.value;
+// ---------- Main button click ----------
+if (downloadBtn) {
+  downloadBtn.addEventListener("click", async () => {
+    const videoUrl = urlInput.value.trim();
+    const resolution = resolutionSelect.value;
 
-  if (!videoUrl) {
-    setStatus("Please paste a video URL first.", "error");
-    return;
-  }
+    if (!videoUrl) {
+      setStatus("Please paste a video URL first.", "error");
+      return;
+    }
 
-  if (!looksLikeUrl(videoUrl)) {
-    setStatus("This does not look like a valid URL.", "error");
-    return;
-  }
+    if (!looksLikeUrl(videoUrl)) {
+      setStatus("This does not look like a valid URL.", "error");
+      return;
+    }
 
-  const platform = detectPlatformFromUrl(videoUrl);
+    const platform = detectPlatformFromUrl(videoUrl);
 
-  setStatus("Sending request to server…", "info");
-  downloadBtn.disabled = true;
+    setStatus("Sending request to server…", "info");
+    downloadBtn.disabled = true;
 
-  try {
-    const response = await fetch(
-      "https://videodownload-production.up.railway.app/api/request",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoUrl, resolution, platform }),
-      }
-    );
-
-    // Server response ကို text အရင်ဖတ်ထားမယ် (debug အတွက်)
-    const rawText = await response.text();
-    console.log("Raw response text:", rawText);
-
-    let data;
     try {
-      data = rawText ? JSON.parse(rawText) : {};
-    } catch (e) {
-      console.error("JSON parse error:", e);
+      const response = await fetch(
+        "https://videodownload-production.up.railway.app/api/request",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoUrl, resolution, platform }),
+        }
+      );
+
+      const rawText = await response.text();
+      console.log("Raw response text:", rawText);
+
+      let data;
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (e) {
+        console.error("JSON parse error:", e);
+        setStatus(
+          "Server responded, but not in JSON format: " + rawText,
+          "error"
+        );
+        return;
+      }
+
+      if (!response.ok) {
+        console.log("Response not OK, status =", response.status, data);
+        setStatus(
+          data.message || `Server error: ${response.status}`,
+          "error"
+        );
+        return;
+      }
+
+      console.log("Parsed JSON:", data);
+
+      if (data.status === "queued") {
+        setStatus(
+          `Request received ✔ Platform: ${
+            platform || "unknown"
+          }. Backend will handle it.`,
+          "ok"
+        );
+      } else if (data.status === "ready" && data.downloadUrl) {
+        setStatus("Your file is ready. Starting download…", "ok");
+        window.location.href = data.downloadUrl;
+      } else {
+        setStatus(
+          data.message ||
+            "Request completed, but no download URL was returned by the server.",
+          "info"
+        );
+      }
+    } catch (err) {
+      console.error("Client error:", err);
       setStatus(
-        "Server responded, but not in JSON format: " + rawText,
+        "Network error while talking to the server: " + err.message,
         "error"
       );
-      return;
+    } finally {
+      downloadBtn.disabled = false;
     }
-
-    if (!response.ok) {
-      console.log("Response not OK, status =", response.status, data);
-      setStatus(
-        data.message || `Server error: ${response.status}`,
-        "error"
-      );
-      return;
-    }
-
-    console.log("Parsed JSON:", data);
-
-    if (data.status === "queued") {
-      setStatus(
-        `Request received ✔ Platform: ${
-          platform || "unknown"
-        }. Backend will handle it.`,
-        "ok"
-      );
-    } else if (data.status === "ready" && data.downloadUrl) {
-      setStatus("Your file is ready. Starting download…", "ok");
-      window.location.href = data.downloadUrl;
-    } else {
-      setStatus(
-        data.message ||
-          "Request completed, but no download URL was returned by the server.",
-        "info"
-      );
-    }
-  } catch (err) {
-    console.error("Client error:", err);
-    setStatus(
-      "Network error while talking to the server: " + err.message,
-      "error"
-    );
-  } finally {
-    downloadBtn.disabled = false;
-  }
-});
+  });
+}
