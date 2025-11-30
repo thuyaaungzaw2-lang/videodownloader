@@ -172,24 +172,24 @@ if (downloadBtn) {
           "ok"
         );
       } else if (data.status === "ready" && data.downloadUrl) {
-        setStatus("Your file is ready. Starting download…", "ok");
-        // 🔥 auto download here
-        window.location.href = data.downloadUrl;
-      } else {
-        setStatus(
-          data.message ||
-            "Request completed, but no download URL was returned by the server.",
-          "info"
-        );
-      }
-    } catch (err) {
-      console.error("Client error:", err);
-      setStatus(
-        "Network error while talking to the server: " + err.message,
-        "error"
-      );
-    } finally {
-      downloadBtn.disabled = false;
-    }
-  });
+        } else if (data.status === "ready" && data.downloadUrl) {
+  setStatus(
+    'Your file is ready. If download does not start, ' +
+      `<a href="${data.downloadUrl}" download class="download-link">click here</a>.`,
+    "ok"
+  );
+
+  // 🔥 Auto download
+  try {
+    const a = document.createElement("a");
+    a.href = data.downloadUrl;
+    a.download = ""; // browser ကို "save as" အနေနဲ့ သဘောကြောင့်
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (e) {
+    console.error("Auto-download failed, showing link only:", e);
+  }
+}
+
 }
