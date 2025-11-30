@@ -1,6 +1,6 @@
 
 {
-  "name": "video-helper-backend",
+  "name": "Video Downloader-backend",
   "version": "1.0.0",
   "description": "All-in-One video helper backend (URL + resolution + platform, no downloader logic included).",
   "main": "server.js",
