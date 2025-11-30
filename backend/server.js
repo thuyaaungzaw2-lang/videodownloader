@@ -1,12 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const https = require("https"); // ⭐ GitHub mp4 ကို proxy လုပ်ဖို့
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ဒီနေရာမှာ frontend origin ကို env နဲ့ထိန်းချင်ရင် သုံးလို့ရမယ်
-// Railway မှာ ALLOWED_ORIGINS ကို set လိုက်ရင် okay
+// Railway env နဲ့ origin control
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map((x) => x.trim())
@@ -15,7 +15,6 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "")
 app.use(
   cors({
     origin(origin, callback) {
-      // mobile app / curl / server-side request တွေအတွက် origin မပါတဲ့အခါ
       if (!origin) {
         return callback(null, true);
       }
@@ -76,11 +75,11 @@ app.get("/", (req, res) => {
     name: "All-in-One Video Helper Backend",
     author: "Thu Ya Aung Zaw",
     message:
-      "Backend is running. Implement your own processing / download logic according to each platform's rules.",
+      "Backend is running. This server proxies your own video file with download headers.",
   });
 });
 
-// Main API – auto generate download link
+// 🔥 MAIN API – frontend က ဒီကိုခေါ်မယ်
 app.post("/api/request", async (req, res) => {
   const { videoUrl, resolution = "auto", platform } = req.body || {};
 
@@ -116,17 +115,19 @@ app.post("/api/request", async (req, res) => {
     detectedPlatform,
   });
 
-  // ❗ ဒီနေရာက ပြင်ရမယ့်အချက်တစ်ခု
-  // ကိုယ် အမြဲ down လိုချင်တဲ့ mp4 ဖိုင် URL ကိုဒီမှာထည့်
-  // (ကိုယ်ပိုင် file server / own content ဖြစ်ရမယ်)
- const demoDownloadUrl =
-  "https://thuyaaungzaw2-lang.github.io/videodownload/videos/myvideo.mp4";
+  // ✅ ကိုယ်ပိုင် GitHub mp4 URL
+  const sourceUrl =
+    "https://thuyaaungzaw2-lang.github.io/videodownload/videos/myvideo.mp4";
 
+  // ဒီ proxy endpoint က ဖိုင်ကို attachment header နဲ့ပဲပို့မယ်
+  const downloadUrl =
+    "https://videodownload-production.up.railway.app/direct-download?source=" +
+    encodeURIComponent(sourceUrl);
 
   return res.json({
     status: "ready",
     message: "Your file is ready for download.",
-    downloadUrl: demoDownloadUrl,
+    downloadUrl,
     info: {
       videoUrl,
       requestedResolution: resolution,
@@ -136,6 +137,45 @@ app.post("/api/request", async (req, res) => {
           : detectedPlatform,
     },
   });
+});
+
+// 🔥 NEW: GitHub mp4 ကို proxy လုပ်ပြီး attachment အနေနဲ့ပို့မယ့် route
+app.get("/direct-download", (req, res) => {
+  const source = req.query.source;
+
+  if (!source) {
+    return res.status(400).send("Missing source parameter.");
+  }
+
+  // simple security check – မင်းရဲ့ GitHub path ထဲက file တွေလောက်ပဲ allow
+  const allowedPrefix =
+    "https://thuyaaungzaw2-lang.github.io/videodownload/videos/";
+  if (!source.startsWith(allowedPrefix)) {
+    return res.status(400).send("Invalid source URL.");
+  }
+
+  console.log("Proxying download from:", source);
+
+  // Download header တွေသတ်
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="myvideo.mp4"'
+  );
+  res.setHeader("Content-Type", "video/mp4");
+
+  // GitHub mp4 ကို fetch + pipe
+  https
+    .get(source, (upstream) => {
+      if (upstream.statusCode !== 200) {
+        console.error("Upstream status code:", upstream.statusCode);
+        res.status(upstream.statusCode || 500);
+      }
+      upstream.pipe(res);
+    })
+    .on("error", (err) => {
+      console.error("Error fetching source:", err);
+      res.status(500).send("Error fetching source video.");
+    });
 });
 
 // 404 fallback
