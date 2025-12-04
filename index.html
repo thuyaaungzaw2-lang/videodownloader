@@ -2,428 +2,683 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Video Downloader - Thu Ya Aung Zaw</title>
+  <title>Video Downloader – ThuYaAungZaw</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+  <!-- PWA Meta Tags -->
+  <meta name="application-name" content="Video Downloader">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VideoDL">
+  <meta name="theme-color" content="#ff2e2e">
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #02010a;
-      color: #f9fafb;
-      overflow: hidden;
-    }
+  <!-- iOS main icon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152x152.png">
 
-    /* ======= Background Kaneki Layer ======= */
-    .bg-layer {
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(circle at top left, rgba(248, 113, 113, 0.26), transparent 55%),
-        radial-gradient(circle at bottom right, rgba(248, 113, 113, 0.3), transparent 60%);
-      z-index: -2;
-    }
+  <!-- Android / Chrome -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 
-    .bg-image {
-      position: fixed;
-      inset: 0;
-      background-image: url(https://wallpapers.com/images/featured-full/kaneki-xsv5e4ut8mxmqae9.jpg);
-      background-position: center right;
-      background-size: cover;
-      opacity: 0.16;
-      mix-blend-mode: screen;
-      filter: saturate(1.2) contrast(1.05);
-      z-index: -3;
-    }
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="favicon.ico">
 
-    .noise {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image: url("https://grainy-overlay.vercel.app/noise.png");
-      opacity: 0.35;
-      mix-blend-mode: soft-light;
-      z-index: -1;
-    }
-
-    /* ======= App Card ======= */
-    .app-shell {
-      width: 100%;
-      max-width: 500px;
-      padding: 18px;
-    }
-
-    .app-container {
-      width: 100%;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.97), rgba(10, 10, 10, 0.96));
-      border-radius: 20px;
-      padding: 20px 18px 16px;
-      border: 1px solid rgba(248, 113, 113, 0.35);
-      box-shadow:
-        0 22px 60px rgba(0, 0, 0, 0.8),
-        0 0 40px rgba(248, 113, 113, 0.15);
-      backdrop-filter: blur(20px);
-      animation: floatIn 0.8s ease-out both;
-    }
-
-    @keyframes floatIn {
-      from {
-        opacity: 0;
-        transform: translateY(18px) scale(0.96);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .app-header {
-      margin-bottom: 16px;
-    }
-
-    .badge-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(248, 113, 113, 0.7);
-      color: #fecaca;
-      background: radial-gradient(circle at top left, rgba(248, 113, 113, 0.25), transparent 60%);
-    }
-
-    .badge-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
-    }
-
-    .tiny-tag {
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #9ca3af;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 3px;
-    }
-
-    h1 span.accent {
-      color: #f97373;
-      text-shadow: 0 0 16px rgba(248, 113, 113, 0.7);
-    }
-
-    .subtitle {
-      font-size: 0.85rem;
-      color: #9ca3af;
-      max-width: 90%;
-    }
-
-    .form-group {
-      margin-top: 14px;
-    }
-
-    label {
-      font-size: 0.78rem;
-      color: #9ca3af;
-      margin-bottom: 5px;
-      display: block;
-    }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 11px 12px 11px 32px;
-      border-radius: 12px;
-      border: 1px solid rgba(75, 85, 99, 0.9);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(3, 7, 18, 0.98));
-      color: #f9fafb;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border 0.18s ease, box-shadow 0.18s ease, transform 0.08s ease;
-    }
-
-    input[type="text"]:focus {
-      border-color: rgba(248, 113, 113, 0.9);
-      box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.5);
-      transform: translateY(-1px);
-    }
-
-    .input-icon {
-      position: absolute;
-      top: 50%;
-      left: 10px;
-      transform: translateY(-50%);
-      font-size: 12px;
-      color: #9ca3af;
-      pointer-events: none;
-    }
-
-    .platforms {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .chip {
-      flex: 1 1 90px;
-      font-size: 0.78rem;
-      padding: 7px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      text-align: center;
-      cursor: default;
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-      transition: border 0.18s ease, background 0.18s ease, transform 0.08s ease, box-shadow 0.18s ease;
-    }
-
-    .chip span.dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      margin-right: 4px;
-      background: #6b7280;
-    }
-
-    .chip.facebook { border-color: rgba(59, 130, 246, 0.6); }
-    .chip.youtube { border-color: rgba(248, 113, 113, 0.85); }
-    .chip.tiktok { border-color: rgba(168, 85, 247, 0.7); }
-
-    .chip.active {
-      transform: translateY(-1px);
-      box-shadow: 0 0 18px rgba(248, 113, 113, 0.35);
-      background: radial-gradient(circle at top, rgba(127, 29, 29, 0.9), rgba(15, 23, 42, 0.96));
-      border-color: rgba(248, 113, 113, 1);
-    }
-
-    .chip.active span.dot {
-      background: #fca5a5;
-    }
-
-    .action-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
-      align-items: center;
-    }
-
-    select {
-      flex: 1 1 150px;
-      padding: 9px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(75, 85, 99, 0.9);
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 0.85rem;
-      outline: none;
-    }
-
-    select:focus {
-      border-color: rgba(248, 113, 113, 0.85);
-      box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.5);
-    }
-
-    button.primary {
-      flex: 1 1 130px;
-      border: none;
-      border-radius: 12px;
-      padding: 11px 12px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      background: radial-gradient(circle at top left, #ef4444, #7f1d1d);
-      color: #f9fafb;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow:
-        0 12px 25px rgba(127, 29, 29, 0.8),
-        0 0 24px rgba(248, 113, 113, 0.45);
-      transition: transform 0.09s ease, box-shadow 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
-    }
-
-    button.primary span.icon {
-      font-size: 1.05rem;
-    }
-
-    button.primary:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-      box-shadow:
-        0 18px 35px rgba(127, 29, 29, 0.95),
-        0 0 32px rgba(248, 113, 113, 0.6);
-    }
-
-    button.primary:active {
-      transform: translateY(1px);
-      box-shadow: none;
-      opacity: 0.9;
-    }
-
-    button.primary:disabled {
-      opacity: 0.6;
-      box-shadow: none;
-      cursor: wait;
-    }
-
-    .status {
-      margin-top: 10px;
-      font-size: 0.78rem;
-      min-height: 18px;
-    }
-
-    .status.ok { color: #bbf7d0; }
-    .status.error { color: #fecaca; }
-    .status.info { color: #facc15; }
-
-    .status .platform-label {
-      font-weight: 500;
-      color: #f97373;
-    }
-
-    .footer {
-      border-top: 1px solid rgba(31, 41, 55, 0.9);
-      margin-top: 14px;
-      padding-top: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.76rem;
-      color: #9ca3af;
-    }
-
-    .dev-name {
-      font-weight: 500;
-      color: #f9fafb;
-    }
-
-    @media (min-width: 768px) {
-      .app-container {
-        padding: 22px 22px 18px;
-      }
-      h1 {
-        font-size: 1.7rem;
-      }
-    }
-  </style>
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json">
 </head>
+
+<style>
+  :root {
+    --bg-gradient: radial-gradient(circle at top left, #1a0000, #0a0000 55%, #000000 100%);
+    --card-bg: rgba(20, 0, 0, 0.9);
+    --accent: #ff2e2e;
+    --accent-soft: rgba(255, 46, 46, 0.18);
+    --text-main: #f9e8e8;
+    --text-muted: #b89494;
+    --danger: #ff6b6b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    background: 
+      linear-gradient(rgba(10, 0, 0, 0.88), rgba(0, 0, 0, 0.96)),
+      url('https://wallpapers.com/images/featured-full/kaneki-xsv5e4ut8mxmqae9.jpg') center/cover fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    color: var(--text-main);
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 20% 30%, rgba(255, 46, 46, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(139, 0, 0, 0.18) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  /* subtle red scan effect */
+  .scanline {
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(to bottom, rgba(255,0,0,0.18) 0, transparent 2px);
+    background-size: 100% 4px;
+    mix-blend-mode: soft-light;
+    opacity: 0.12;
+    pointer-events: none;
+    animation: scan 7s linear infinite;
+  }
+
+  @keyframes scan {
+    0% { transform: translateY(-8px); }
+    100% { transform: translateY(8px); }
+  }
+
+  /* small floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(255,46,46,0.7), transparent 60%);
+    filter: blur(2px);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+  .orb.orb-1 { width: 90px; height: 90px; top: 8%; left: 6%; animation: float1 12s ease-in-out infinite alternate; }
+  .orb.orb-2 { width: 70px; height: 70px; bottom: 10%; right: 10%; animation: float2 10s ease-in-out infinite alternate; }
+
+  @keyframes float1 {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(16px, 10px, 0); }
+  }
+  @keyframes float2 {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-14px, -12px, 0); }
+  }
+
+  .wrapper { max-width: 520px; width: 100%; z-index: 1; }
+
+  .card {
+    background: radial-gradient(circle at top left, rgba(40,0,0,0.95), rgba(0,0,0,0.98));
+    border-radius: 24px;
+    padding: 24px 22px 18px;
+    box-shadow:
+      0 0 20px rgba(255, 46, 46, 0.35),
+      0 25px 70px rgba(0, 0, 0, 0.96);
+    backdrop-filter: blur(22px);
+    border: 1px solid rgba(255, 46, 46, 0.35);
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1px solid rgba(255, 46, 46, 0.7);
+    box-shadow:
+      0 0 18px rgba(255, 46, 46, 0.7),
+      0 0 30px rgba(255, 0, 0, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .card:hover::before {
+    opacity: 0.8;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 46, 46, 0.6);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.28), transparent);
+    transform: translateX(-120%);
+    opacity: 0.7;
+    animation: badgeShine 5s linear infinite;
+  }
+
+  @keyframes badgeShine {
+    0%   { transform: translateX(-130%); }
+    50%  { transform: translateX(130%); }
+    100% { transform: translateX(130%); }
+  }
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow:
+      0 0 8px rgba(255, 46, 46, 0.9),
+      0 0 14px rgba(255, 46, 46, 0.7);
+    position: relative;
+    animation: ping 1.8s infinite;
+  }
+
+  @keyframes ping {
+    0% { transform: scale(1); opacity: 1; }
+    70% { transform: scale(1.8); opacity: 0; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  h1 { 
+    font-size: 23px; 
+    margin-top: 14px; 
+    margin-bottom: 6px; 
+    background: linear-gradient(90deg, #ff6b6b, #ffffff, #ff2e2e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 12px rgba(255,46,46,0.5);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 18px;
+  }
+
+  .chips { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 6px; 
+    margin-bottom: 18px; 
+  }
+
+  .chip {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(255, 46, 46, 0.45);
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+    transition: border 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+
+  .chip-dot {
+    width: 6px; height: 6px; border-radius: 999px; background: var(--accent);
+    box-shadow: 0 0 8px rgba(255,46,46,0.8);
+  }
+
+  .chip:hover {
+    border-color: rgba(255, 255, 255, 0.65);
+    background: rgba(40, 0, 0, 0.95);
+    color: var(--text-main);
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+  }
+
+  .input-wrapper { position: relative; margin-bottom: 14px; }
+
+  input[type="url"] {
+    width: 100%;
+    padding: 12px 90px 12px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 46, 46, 0.7);
+    background: radial-gradient(circle at top left, rgba(20,0,0,0.85), rgba(0,0,0,0.98));
+    color: var(--text-main);
+    font-size: 14px;
+    outline: none;
+    transition: border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, transform 0.12s ease;
+  }
+
+  input[type="url"]::placeholder { color: #8b6b6b; font-size: 13px; }
+
+  input[type="url"]:focus {
+    border-color: var(--accent);
+    box-shadow:
+      0 0 0 2px rgba(255, 46, 46, 0.5),
+      0 0 20px rgba(255, 46, 46, 0.7);
+    background: radial-gradient(circle at top left, rgba(35,0,0,0.95), rgba(0,0,0,1));
+    transform: translateY(-1px);
+  }
+
+  .service-pill {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.9);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid rgba(255, 46, 46, 0.7);
+    box-shadow: 0 0 18px rgba(255, 46, 46, 0.6);
+    animation: pillPulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pillPulse {
+    0%, 100% { transform: translateY(-50%) scale(1); opacity: 0.9; }
+    50% { transform: translateY(-50%) scale(1.06); opacity: 1; }
+  }
+
+  select {
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 46, 46, 0.7);
+    background: rgba(0, 0, 0, 0.92);
+    color: var(--text-main);
+    font-size: 13px;
+    display: none;
+    outline: none;
+  }
+
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(255, 46, 46, 0.5);
+  }
+
+  button {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 11px 14px;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    background:
+      radial-gradient(circle at 0% 0%, #ff6b6b, #ff2e2e),
+      linear-gradient(90deg, #8b0000, #ff2e2e, #ff6b6b);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow:
+      0 0 18px rgba(255, 46, 46, 0.8),
+      0 16px 45px rgba(0, 0, 0, 0.95);
+    transition: transform 0.09s ease, box-shadow 0.09s ease, filter 0.09s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 44px;
+    animation: btnBreath 4s ease-in-out infinite;
+  }
+
+  @keyframes btnBreath {
+    0%, 100% { box-shadow:
+                0 0 14px rgba(255,46,46,0.6),
+                0 14px 40px rgba(0,0,0,0.9); }
+    50% { box-shadow:
+                0 0 22px rgba(255,46,46,0.95),
+                0 18px 50px rgba(0,0,0,1); }
+  }
+
+  button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-18deg);
+  }
+
+  button:hover::before {
+    animation: btnShine 0.65s forwards;
+  }
+
+  @keyframes btnShine {
+    0% { left: -120%; }
+    100% { left: 160%; }
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+  }
+
+  button:active {
+    transform: translateY(0);
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 1),
+      0 0 18px rgba(255, 46, 46, 0.8);
+  }
+
+  .btn-icon { font-size: 15px; }
+
+  .status {
+    font-size: 12px;
+    margin-top: 10px;
+    min-height: 18px;
+    color: var(--text-muted);
+  }
+
+  .status.error { color: var(--danger); }
+
+  .result {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.92);
+    border: 1px dashed rgba(255, 46, 46, 0.7);
+    font-size: 13px;
+    display: none;
+  }
+
+  .result a {
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .result a:hover { 
+    text-decoration: underline;
+    color: #ff8c8c;
+  }
+
+  .disclaimer {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .footer {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .footer a:hover { 
+    text-decoration: underline;
+    color: #ff8c8c;
+  }
+  
+  /* PWA Install Button */
+  #installButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: linear-gradient(90deg, #8b0000, #ff2e2e);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(255, 46, 46, 0.5);
+    display: none;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { box-shadow: 0 4px 12px rgba(255, 46, 46, 0.3); }
+    50% { box-shadow: 0 4px 20px rgba(255, 46, 46, 0.8); }
+    100% { box-shadow: 0 4px 12px rgba(255, 46, 46, 0.3); }
+  }
+  
+  body.standalone-mode {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  @media (max-width: 520px) {
+    .card { padding: 22px 18px 16px; }
+    h1 { font-size: 21px; }
+    #installButton {
+      bottom: 10px;
+      right: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+  }
+</style>
+
 <body>
-  <div class="bg-layer"></div>
-  <div class="bg-image"></div>
-  <div class="noise"></div>
+  <!-- subtle neon environment -->
+  <div class="scanline"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
 
-  <div class="app-shell">
-    <div class="app-container">
-      <header class="app-header">
-        <div class="badge-row">
-          <div class="badge">
-            <span class="badge-dot"></span>
-            <span>ThuYaAungZaw</span>
-          </div>
-          <span class="tiny-tag">multi platform</span>
-        </div>
-        <h1>
-          Video <span class="accent">Downloader</span>
-        </h1>
-        <p class="subtitle">
-          Paste your link from Facebook, YouTube or TikTok. We&#39;ll detect the platform.
-        </p>
-      </header>
+  <div class="wrapper">
+    <div class="card">
+      <div class="badge">
+        <span class="badge-dot"></span>
+       <strong>ThuYaAungZaw</strong>
+      </div>
 
-      <main>
-        <div class="form-group">
-          <label for="videoUrl">Video URL</label>
-          <div class="input-wrapper">
-            <span class="input-icon">⛓</span>
-            <input
-              type="text"
-              id="videoUrl"
-              placeholder="https://www.youtube.com/watch?v=..."
-              autocomplete="off"
-            />
-          </div>
-        </div>
+      <h1>Video Downloader</h1>
+      <p class="subtitle">
+        Paste any <strong>TikTok</strong>, <strong>Facebook</strong> or <strong>YouTube</strong> video link,
+        choose a quality and get a direct download link.
+      </p>
 
-        <div class="form-group">
-          <label>Detected platform</label>
-          <div class="platforms">
-            <div class="chip facebook" data-platform="facebook">
-              <span class="dot"></span>Facebook
-            </div>
-            <div class="chip youtube" data-platform="youtube">
-              <span class="dot"></span>YouTube
-            </div>
-            <div class="chip tiktok" data-platform="tiktok">
-              <span class="dot"></span>TikTok
-            </div>
-          </div>
-        </div>
+      <div class="chips">
+        <span class="chip"><span class="chip-dot"></span>TikTok / Facebook / YouTube</span>
+        <span class="chip"><span class="chip-dot"></span>Quality selection</span>
+        <span class="chip"><span class="chip-dot"></span>Not allowed photo+music</span>
+      </div>
 
-        <div class="form-group">
-          <label for="resolution">Preferred resolution</label>
-          <div class="action-row">
-            <select id="resolution">
-              <option value="auto">Auto (best available)</option>
-              <option value="1080p">1080p</option>
-              <option value="720p">720p</option>
-              <option value="480p">480p</option>
-              <option value="360p">360p</option>
-            </select>
+      <label for="url">Video URL</label>
+      <div class="input-wrapper">
+        <input
+          id="url"
+          type="url"
+          placeholder="Paste a TikTok, Facebook or YouTube link..."
+          autocomplete="off"
+        />
+        <span id="service-pill" class="service-pill">Auto detect</span>
+      </div>
 
-            <button class="primary" id="downloadBtn">
-              <span>Start</span>
-              <span class="icon">⭳</span>
-            </button>
-          </div>
-        </div>
+      <select id="quality"></select>
 
-        <div id="status" class="status info">
-          Paste a link to auto-detect the platform.
-        </div>
-      </main>
+      <button id="download-btn" type="button">
+        <span class="btn-icon">💟</span>
+        <span>Generate Download Link</span>
+         <span class="btn-icon">💟</span>
+      </button>
 
-      <footer class="footer">
-        <span>
-          Developed by
-          <span class="dev-name">Thu Ya Aung Zaw</span>
-          <a href="https://www.facebook.com/thura.aungzaw.69" target="_blank" rel="noopener">
-         
-        </span>
-        <span>&copy; <span id="year"></span></span>
-      </footer>
+      <div id="status" class="status">
+        Step 1 – Paste Link, Step 2 – Choose quality, Step 3 – Download ⬇
+      </div>
+      <div id="result" class="result"></div>
+
+      <p class="disclaimer">
+        Please only download videos that you have permission to save.
+        Respect the copyright and terms of service of each platform.
+      </p>
+
+      <div class="footer">
+        <span>Developer by <strong>ThuYaAungZaw</strong></span>
+        <a href="https://www.facebook.com/thura.aungzaw.69" target="_blank" rel="noopener">
+         Facebook
+        </a>
+      </div>
     </div>
   </div>
 
-  <script src="./main.js"></script>
+  <!-- PWA Install Button -->
+  <button id="installButton" style="display: none;">📱 Install App</button>
+
+  <script>
+const API_BASE = "https://videodownload-production.up.railway.app";
+
+const urlInput = document.getElementById("url");
+const servicePill = document.getElementById("service-pill");
+const statusEl = document.getElementById("status");
+const resultEl = document.getElementById("result");
+const downloadBtn = document.getElementById("download-btn");
+const qualitySelect = document.getElementById("quality");
+
+let lastFormats = [];
+let lastUrl = "";
+
+// --- Detect service ---
+function detectService(url) {
+  if (!url) return "Auto detect";
+  const u = url.toLowerCase();
+  if (u.includes("tiktok")) return "TikTok";
+  if (u.includes("facebook") || u.includes("fb.watch")) return "Facebook";
+  if (u.includes("youtube") || u.includes("youtu.be")) return "YouTube";
+  return "Unknown Error";
+}
+
+urlInput.addEventListener("input", () => {
+  const service = detectService(urlInput.value.trim());
+  servicePill.textContent = service;
+
+  qualitySelect.style.display = "none";
+  qualitySelect.innerHTML = "";
+  lastFormats = [];
+  lastUrl = "";
+  resultEl.style.display = "none";
+  statusEl.classList.remove("error");
+  statusEl.textContent = "Detecting Link…";
+});
+
+// --- Fetch formats ---
+async function fetchFormats(url) {
+  const reqUrl = `${API_BASE}/formats?url=${encodeURIComponent(url)}`;
+  const res = await fetch(reqUrl);
+  if (!res.ok) throw new Error("Failed to load formats");
+  return (await res.json()).formats || [];
+}
+
+function populateQualitySelect(formats) {
+  qualitySelect.innerHTML = "";
+  formats.forEach(f => {
+    const opt = document.createElement("option");
+    opt.value = f.format_id;
+    opt.textContent = f.label;
+    qualitySelect.appendChild(opt);
+  });
+  qualitySelect.style.display = formats.length ? "block" : "none";
+}
+
+// ---------- AUTO DOWNLOAD FUNCTION ----------
+async function startDownload(href, filename) {
+  try {
+    const res = await fetch(href);
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "video.mp4";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error(e);
+    statusEl.textContent = "Auto-download failed. Tap the link manually.";
+    statusEl.classList.add("error");
+  }
+}
+
+// ---------- Main button click ----------
+async function handleClick() {
+  const url = urlInput.value.trim();
+  if (!url) {
+    statusEl.textContent = "Paste a link first.";
+    statusEl.classList.add("error");
+    return;
+  }
+
+  try {
+    // First click: load formats
+    if (lastFormats.length === 0 || lastUrl !== url) {
+      statusEl.textContent = "Checking qualities…";
+      lastFormats = await fetchFormats(url);
+      lastUrl = url;
+      populateQualitySelect(lastFormats);
+      statusEl.textContent = "Choose quality, then tap again to download.";
+      return;
+    }
+
+    // Second click: generate download
+    const formatId = qualitySelect.value;
+    statusEl.textContent = "Auto Downloading…";
+
+    const reqUrl = `${API_BASE}/download?url=${encodeURIComponent(url)}&format_id=${encodeURIComponent(formatId)}`;
+    const res = await fetch(reqUrl);
+    const data = await res.json();
+
+    const href = data.download_url.startsWith("http")
+      ? data.download_url
+      : API_BASE + data.download_url;
+
+    // AUTO DOWNLOAD
+    await startDownload(href, data.filename);
+
+    // Fallback manual link
+    resultEl.style.display = "block";
+    resultEl.innerHTML = `
+      ✅ Download started.<br>
+      If not started, <a href="${href}" download>tap here to download manually</a>.
+    `;
+    statusEl.textContent = "Downloading…";
+
+  } catch (e) {
+    statusEl.textContent = "You can't download the video that has a photo and music.";
+    statusEl.classList.add("error");
+  }
+}
+
+downloadBtn.addEventListener("click", handleClick);
+urlInput.addEventListener("keypress", e => { if (e.key === "Enter") handleClick(); });
+
+// (PWA install script left unchanged)
+  </script>
+
 </body>
 </html>
